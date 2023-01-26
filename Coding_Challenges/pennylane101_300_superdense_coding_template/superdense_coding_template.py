@@ -22,19 +22,34 @@ def superdense_coding(bits, alpha):
     # QHACK #
 
     # Prepare entangled state here
+    amplitudes = [np.cos(alpha), 0, 0, np.sin(alpha)]
+
+    # Nice! prepares the state given a list of random
+    # amplitudes for each of the 2^n basis vectors
+    qml.AmplitudeEmbedding(amplitudes, wires=range(2))
 
     # Implement Alice's operations on her qubit here
+    if bits & 1:
+        qml.PauliX(0)
+    if bits & 2:
+        qml.PauliZ(0)
 
     # Implement Bob's measurement procedure here
+    qml.CNOT(wires=range(2))
+    qml.Hadamard(wires=0)
 
     # QHACK #
-
     return qml.probs(wires=[0, 1])
+
+
+import matplotlib.pyplot as plt
 
 
 def return_probs(bits, alpha):
     """Returns the output of the superdense_coding function for a given index (bits)"""
     # DO NOT MODIFY anything in this code block
+    qml.draw_mpl(superdense_coding)(bits, alpha)
+    plt.savefig("fig.png")
     return superdense_coding(bits, alpha)[bits].numpy()
 
 
