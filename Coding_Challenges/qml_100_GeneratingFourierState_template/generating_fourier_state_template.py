@@ -21,6 +21,24 @@ def generating_fourier_state(n_qubits, m):
 
     dev = qml.device("default.qubit", wires=n_qubits)
 
+    # Nice concept tbh!
+
+    # we use the same concept of execute, get result, tweak the feature
+    # weights and do again till we are getting a desired loss
+
+    # The main thing is the execute and the loss / error
+
+    # execute - done by encoding the things which we want to train
+    # in a quantum circuit and then getting a certain
+    # result from its execution
+
+    # loss/error - how far is your desired output from the current output ?
+    #              the lesser the error the better the output
+
+    # so keep on tweaking the features / angles / entanglement till you
+    # get the lowest loss, or till the loss decrease rate becomes ~
+    # constant !
+
     @qml.qnode(dev)
     def circuit(angles):
         """This is the quantum circuit that we will use."""
@@ -28,7 +46,9 @@ def generating_fourier_state(n_qubits, m):
         # QHACK #
 
         # Add the template of the statement with the angles passed as an argument.
-
+        for i in range(n_qubits):
+            qml.Hadamard(wires=i)
+            qml.RZ(angles[i], wires=i)
         # QHACK #
 
         # We apply QFT^-1 to return to the computational basis.
@@ -48,12 +68,18 @@ def generating_fourier_state(n_qubits, m):
 
         # The return error should be smaller when the state m is more likely to be obtained.
 
+        # well, the probability of the state |m>
+        # should be very very close to 1, then we have
+        # generated a good ansatz
+
+        # so error would be 1 - probability[m] state
+        error_val = (1.0 - probs[m]) ** 2
+        return error_val
         # QHACK #
 
     # This subroutine will find the angles that minimize the error function.
     # Do not modify anything from here.
-
-    opt = qml.AdamOptimizer(stepsize=0.8)
+    opt = qml.AdamOptimizer(stepsize=1e-2)
     epochs = 5000
 
     angles = np.zeros(n_qubits, requires_grad=True)
@@ -80,7 +106,15 @@ if __name__ == "__main__":
         for i in range(n_qubits):
             qml.RY(i, wires=i)
         for op in output[0].qtape.operations:
+            print(op)
             qml.apply(op)
         return qml.state()
 
-    print(",".join([f"{p.real.round(5)},{p.imag.round(5)}" for p in check_with_arbitrary_state()]))
+    print(
+        ",".join(
+            [
+                f"{p.real.round(5)} + {p.imag.round(5)}j"
+                for p in check_with_arbitrary_state()
+            ]
+        )
+    )

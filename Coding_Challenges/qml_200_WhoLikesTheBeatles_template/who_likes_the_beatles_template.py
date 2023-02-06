@@ -17,13 +17,26 @@ def distance(A, B):
     """
 
     # QHACK #
-
+    full_features = np.concatenate([A, B])
     # The Swap test is a method that allows you to calculate |<A|B>|^2 , you could use it to help you.
     # The qml.AmplitudeEmbedding operator could help you too.
+    dev = qml.device("default.qubit", wires=3)
 
-    # dev = qml.device("default.qubit", ...
-    # @qml.qnode(dev)
+    @qml.qnode(dev)
+    def circuit():
+        qml.AmplitudeEmbedding(full_features, wires=[1, 2], normalize=True)
 
+        # perform swap test
+        qml.Hadamard(wires=0)
+        qml.CSWAP(wires=[0, 1, 2])
+        qml.Hadamard(wires=0)
+
+        return qml.probs(wires=0)
+
+    # to do...
+    zero_prob = circuit()[0]
+    overlap = np.sqrt(2 * zero_prob - 1)
+    return np.sqrt(2 * (1 - overlap))
     # QHACK #
 
 
