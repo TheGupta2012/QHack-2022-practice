@@ -18,7 +18,7 @@ def binary_list(m, n):
 
     arr = []
     # QHACK #
-
+    arr = [int(b) for b in bin(m)[2:].zfill(n)]
     # QHACK #
     return arr
 
@@ -37,7 +37,8 @@ def basis_states(n):
     arr = []
 
     # QHACK #
-
+    for num in range(2**n):
+        arr.append(binary_list(num, n))
     # QHACK #
 
     return arr
@@ -56,7 +57,37 @@ def is_particle_preserving(circuit, n):
     """
 
     # QHACK #
+    states = basis_states(n)
 
+    def get_hamming_weight(blist):
+        weight = 0
+        for b in blist:
+            weight += b
+        return weight
+
+    for state in states:
+        init_weight = get_hamming_weight(state)
+        result = list(circuit(state))
+        # okay, ONLY consider the elements having probability > 0
+
+        # You have to measure the state and WHATEVER state you get
+        # should have the same hamming weight
+
+        # NOTE : the state which you get must be the one with a
+        # probability > 0, so you only take those states!
+        final_weight = 0
+        for index, amp in enumerate(result):
+            prob = (amp * amp.conjugate()).real
+            if prob > 0:
+                final_weight = get_hamming_weight(binary_list(index, n))
+                
+                # every possibility should have the same hamming
+                # weight
+                if init_weight != final_weight:
+                    return False
+
+    # if we are still here, we have succeeded!
+    return True
     # QHACK #
 
 
